@@ -1,3 +1,19 @@
+# Important: the reason for this fork
+
+This is a fork of the below study that was used as part of my project for a deep learning course.
+
+I have updated code to work with TF 2.8 and Python 3.9.7. This does still rely on compatibility libraries to do so. I like this project and hope to work to make it work natively with TF2 and many changes were made that alter the paradigm of how the autoencoders are built. 
+
+There are many other small changes throughout the .py files to make them work better with my project.
+
+I have added a notebook that organizes some of the commands based on the original readme. The original authors' format of using scripts was sufficient and I don't do much more than call the modified scripts in the notebook and organize the results at the end. 
+
+Code was altered in all of the models to allow the results to be saved as txt files that can be read in later to make tables. 
+
+
+
+
+
 # ACERTA ABIDE [![DOI](https://zenodo.org/badge/38068726.svg)](https://zenodo.org/badge/latestdoi/38068726)
 Deep learning using the [ABIDE data](http://fcon_1000.projects.nitrc.org/indi/abide/)
 
