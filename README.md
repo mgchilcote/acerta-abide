@@ -10,9 +10,13 @@ I have added a notebook that organizes some of the commands based on the origina
 
 Code was altered in all of the models to allow the results to be saved as txt files that can be read in later to make tables. 
 
+I am preserving the original authors' readme below. Getting this running took effort beyond their original instructions regarding CUDA and other requirements.
 
+My code worked for me on a system running Fedora 36 on a Ryzen 5 3600XT with 32GB RAM and an NVIDIA RTX 3060 with 12GB VRAM.
 
+The original authors state it works on Linux, possibly Mac, and probably not Windows. I was unsuccessful getting it to work properly with WSL2 in Windows. I did not attempt on Mac as the lack of GPU power would make it take prohibitively long. 
 
+Original README follows:
 
 # ACERTA ABIDE [![DOI](https://zenodo.org/badge/38068726.svg)](https://zenodo.org/badge/latestdoi/38068726)
 Deep learning using the [ABIDE data](http://fcon_1000.projects.nitrc.org/indi/abide/)
