@@ -60,5 +60,6 @@ target/
 data/models/*
 data/corr/*
 data/functionals/*
+data/*
 
 .idea

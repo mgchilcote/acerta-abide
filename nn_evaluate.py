@@ -28,11 +28,11 @@ from utils import (load_phenotypes, format_config, hdf5_handler,
                    reset, to_softmax, load_ae_encoder, load_fold)
 from sklearn.metrics import confusion_matrix
 
-
 def nn_results(hdf5, experiment, code_size_1, code_size_2):
-
-    exp_storage = hdf5["experiments"][experiment]
-
+    str_experiment = str(experiment)
+    #str_experiment = str(experiment)[2:-2]
+    exp_storage = hdf5["experiments"][str_experiment]
+    #exp_storage = hdf5["experiments"]["cc200_whole"]
     n_classes = 2
 
     results = []
@@ -67,12 +67,12 @@ def nn_results(hdf5, experiment, code_size_1, code_size_2):
                 {"size": 600, "actv": tf.nn.tanh},
             ])
 
-            init = tf.global_variables_initializer()
-            with tf.Session() as sess:
+            init = tf.compat.v1.global_variables_initializer()
+            with tf.compat.v1.Session() as sess:
 
                 sess.run(init)
 
-                saver = tf.train.Saver(model["params"])
+                saver = tf.compat.v1.train.Saver(model["params"])
                 saver.restore(sess, nn_model_path)
 
                 output = sess.run(
@@ -113,7 +113,16 @@ if __name__ == "__main__":
     pheno_path = "./data/phenotypes/Phenotypic_V1_0b_preprocessed1.csv"
     pheno = load_phenotypes(pheno_path)
 
-    hdf5 = hdf5_handler("./data/abide.hdf5", "a")
+    if arguments["--whole"]:
+        hdf5_name = str("./data/abide_whole.hdf5")
+    if arguments["--male"]:
+        hdf5_name = str("./data/abide_male.hdf5")
+    if arguments["--threshold"]:
+        hdf5_name = str("./data/abide_threshold.hdf5")
+    if arguments["--leave-site-out"]:
+        hdf5_name = str("./data/abide_leave-site-out.hdf5")
+
+    hdf5 = hdf5_handler(bytes(hdf5_name,encoding="utf8"), 'a')
 
     valid_derivatives = ["cc200", "aal", "ez", "ho", "tt", "dosenbach160"]
     derivatives = [derivative for derivative
@@ -127,7 +136,7 @@ if __name__ == "__main__":
         config = {"derivative": derivative}
 
         if arguments["--whole"]:
-            experiments += [format_config("{derivative}_whole", config)],
+            experiments += [format_config("{derivative}_whole", config)]
 
         if arguments["--male"]:
             experiments += [format_config("{derivative}_male", config)]
@@ -155,10 +164,15 @@ if __name__ == "__main__":
     for experiment in experiments:
         results.append(nn_results(hdf5, experiment, code_size_1, code_size_2))
 
+    print(results)
     cols = ["Exp", "Accuracy", "Precision", "Recall", "F-score",
             "Sensivity", "Specificity"]
     df = pd.DataFrame(results, columns=cols)
 
-    print df[cols] \
+    print(df[cols] \
         .sort_values(["Exp"]) \
         .reset_index()
+    )
+
+    results_name = hdf5_name[:-5] + "_results.txt"
+    df.to_csv(results_name, header=True, index=True, sep='\t', mode='w')

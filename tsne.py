@@ -72,12 +72,12 @@ def reduce(config, folds, model_path, data_path, id_path):
             {"size": 600, "actv": tf.nn.tanh},
         ])
 
-        init = tf.global_variables_initializer()
-        with tf.Session() as sess:
+        init = tf.compat.v1.global_variables_initializer()
+        with tf.compat.v1.Session() as sess:
 
             sess.run(init)
 
-            saver = tf.train.Saver(model["params"])
+            saver = tf.compat.v1.train.Saver(model["params"])
             saver.restore(sess, fold_model_path)
 
             train_X = sess.run(
@@ -113,8 +113,8 @@ def reduce(config, folds, model_path, data_path, id_path):
 
     LOG_DIR = './tensorboard/'
 
-    glob_sess = tf.InteractiveSession()
-    summary_writer = tf.summary.FileWriter(LOG_DIR)
+    glob_sess = tf.compat.v1.InteractiveSession()
+    summary_writer = tf.compat.v1.summary.FileWriter(LOG_DIR)
     projector_config = projector.ProjectorConfig()
 
     embeddings = []
@@ -144,7 +144,7 @@ def reduce(config, folds, model_path, data_path, id_path):
                 site = "_".join(subject.split("_")[:-1])
                 metadata_file.write("%s\t%s\t%s\t%s\n" % (subject, site, names[y[i]], dt[datatype[i]]))
 
-    saver = tf.train.Saver(embeddings)
+    saver = tf.compat.v1.train.Saver(embeddings)
     projector.visualize_embeddings(summary_writer, projector_config)
     saver.save(glob_sess, os.path.join(LOG_DIR, "embeddings.ckpt"))
     glob_sess.close()

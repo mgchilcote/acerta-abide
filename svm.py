@@ -19,13 +19,13 @@ Options:
 
 """
 
-import random
 import numpy as np
-import tabulate
+import pandas as pd
 from docopt import docopt
 from utils import (load_phenotypes, format_config, hdf5_handler, load_fold, reset)
 from sklearn.svm import SVC
 from sklearn.metrics import confusion_matrix
+import os
 
 
 def run(X_train, y_train, X_test, y_test):
@@ -45,7 +45,7 @@ def run(X_train, y_train, X_test, y_test):
 
 
 def run_svm(hdf5, experiment):
-
+    experiment = str(experiment)
     exp_storage = hdf5["experiments"][experiment]
 
     folds = []
@@ -72,7 +72,16 @@ if __name__ == "__main__":
     pheno_path = "./data/phenotypes/Phenotypic_V1_0b_preprocessed1.csv"
     pheno = load_phenotypes(pheno_path)
 
-    hdf5 = hdf5_handler("./data/abide.hdf5", "a")
+    if arguments["--whole"]:
+        hdf5_name = str("./data/abide_whole.hdf5")
+    if arguments["--male"]:
+        hdf5_name = str("./data/abide_male.hdf5")
+    if arguments["--threshold"]:
+        hdf5_name = str("./data/abide_threshold.hdf5")
+    if arguments["--leave-site-out"]:
+        hdf5_name = str("./data/abide_leave-site-out.hdf5")
+
+    hdf5 = hdf5_handler(bytes(hdf5_name,encoding="utf8"), 'a')
 
     valid_derivatives = ["cc200", "aal", "ez", "ho", "tt", "dosenbach160"]
     derivatives = [derivative for derivative
@@ -86,7 +95,7 @@ if __name__ == "__main__":
         config = {"derivative": derivative}
 
         if arguments["--whole"]:
-            experiments += [format_config("{derivative}_whole", config)],
+            experiments += [format_config("{derivative}_whole", config)]
 
         if arguments["--male"]:
             experiments += [format_config("{derivative}_male", config)]
@@ -108,6 +117,16 @@ if __name__ == "__main__":
         results = run_svm(hdf5, experiment)
         experiment_results += [[experiment] + results]
 
-    print tabulate.tabulate(experiment_results,
-                   headers=["exp", "acc", "prec", "recall",
-                            "fscore", "sens", "spec"])
+    print(experiment_results)
+
+    cols = ["Exp", "Accuracy", "Precision", "Recall", "F-score",
+            "Sensivity", "Specificity"]
+    df = pd.DataFrame(experiment_results, columns=cols)
+
+    print(df[cols] \
+        .sort_values(["Exp"]) \
+        .reset_index()
+    )
+
+    filename = os.getcwd() + "/data/svm_results.txt"
+    df.to_csv(filename, header=True, index=True, sep='\t', mode='w')

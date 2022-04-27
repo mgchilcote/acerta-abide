@@ -67,15 +67,15 @@ def run_autoencoder1(experiment,
         model["cost"] += sparsity_penalty(model["encode"], sparse_p, sparse_coeff)
 
     # Use GD for optimization of model cost
-    optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(model["cost"])
+    optimizer = tf.compat.v1.train.GradientDescentOptimizer(learning_rate).minimize(model["cost"])
 
     # Initialize Tensorflow session
-    init = tf.global_variables_initializer()
-    with tf.Session() as sess:
+    init = tf.compat.v1.global_variables_initializer()
+    with tf.compat.v1.Session() as sess:
         sess.run(init)
 
         # Define model saver
-        saver = tf.train.Saver(model["params"], write_version=tf.train.SaverDef.V2)
+        saver = tf.compat.v1.train.Saver(model["params"], write_version=tf.compat.v1.train.SaverDef.V2)
 
         # Initialize with an absurd cost for model selection
         prev_costs = np.array([9999999999] * 3)
@@ -170,10 +170,10 @@ def run_autoencoder2(experiment,
                     corruption=0.0,  # Disable corruption for conversion
                     enc=tf.nn.tanh, dec=None)
 
-    init = tf.global_variables_initializer()
-    with tf.Session() as sess:
+    init = tf.compat.v1.global_variables_initializer()
+    with tf.compat.v1.Session() as sess:
         sess.run(init)
-        saver = tf.train.Saver(prev_model["params"], write_version=tf.train.SaverDef.V2)
+        saver = tf.compat.v1.train.Saver(prev_model["params"], write_version=tf.compat.v1.train.SaverDef.V2)
         if os.path.isfile(prev_model_path):
             saver.restore(sess, prev_model_path)
         X_train = sess.run(prev_model["encode"], feed_dict={prev_model["input"]: X_train})
@@ -197,15 +197,15 @@ def run_autoencoder2(experiment,
     model = ae(prev_code_size, code_size, corruption=corruption, enc=ae_enc, dec=ae_dec)
 
     # Use GD for optimization of model cost
-    optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(model["cost"])
+    optimizer = tf.compat.v1.train.GradientDescentOptimizer(learning_rate).minimize(model["cost"])
 
     # Initialize Tensorflow session
-    init = tf.global_variables_initializer()
-    with tf.Session() as sess:
+    init = tf.compat.v1.global_variables_initializer()
+    with tf.compat.v1.Session() as sess:
         sess.run(init)
 
         # Define model saver
-        saver = tf.train.Saver(model["params"], write_version=tf.train.SaverDef.V2)
+        saver = tf.compat.v1.train.Saver(model["params"], write_version=tf.compat.v1.train.SaverDef.V2)
 
         # Initialize with an absurd cost for model selection
         prev_costs = np.array([9999999999] * 3)
@@ -323,24 +323,24 @@ def run_finetuning(experiment,
     ])
 
     # Place GD + momentum optimizer
-    model["momentum"] = tf.placeholder("float32")
-    optimizer = tf.train.MomentumOptimizer(learning_rate, model["momentum"]).minimize(model["cost"])
+    model["momentum"] = tf.compat.v1.placeholder("float32")
+    optimizer = tf.compat.v1.train.MomentumOptimizer(learning_rate, model["momentum"]).minimize(model["cost"])
 
     # Compute accuracies
     correct_prediction = tf.equal(
-        tf.argmax(model["output"], 1),
-        tf.argmax(model["expected"], 1)
+        tf.argmax(input=model["output"], axis=1),
+        tf.argmax(input=model["expected"], axis=1)
     )
-    accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
+    accuracy = tf.reduce_mean(input_tensor=tf.cast(correct_prediction, "float"))
 
     # Initialize Tensorflow session
-    init = tf.global_variables_initializer()
-    with tf.Session() as sess:
+    init = tf.compat.v1.global_variables_initializer()
+    with tf.compat.v1.Session() as sess:
         sess.run(init)
 
 
         # Define model saver
-        saver = tf.train.Saver(model["params"], write_version=tf.train.SaverDef.V2)
+        saver = tf.compat.v1.train.Saver(model["params"], write_version=tf.compat.v1.train.SaverDef.V2)
 
         # Initialize with an absurd cost and accuracy for model selection
         prev_costs = np.array([9999999999] * 3)
@@ -442,8 +442,8 @@ def run_finetuning(experiment,
 
 def run_nn(hdf5, experiment, code_size_1, code_size_2):
     # tf.disable_v2_behavior()
-
-    exp_storage = hdf5["experiments"][experiment]
+    str_experiment = str(experiment)
+    exp_storage = hdf5["experiments"][str_experiment]
 
     for fold in exp_storage:
 
@@ -504,8 +504,16 @@ if __name__ == "__main__":
     pheno_path = "./data/phenotypes/Phenotypic_V1_0b_preprocessed1.csv"
     pheno = load_phenotypes(pheno_path)
 
-    # hdf5 = hdf5_handler("./data/abide.hdf5", "a")
-    hdf5 = hdf5_handler(bytes("./data/abide.hdf5",encoding="utf8"), 'a')
+    if arguments["--whole"]:
+        hdf5_name = str("./data/abide_whole.hdf5")
+    if arguments["--male"]:
+        hdf5_name = str("./data/abide_male.hdf5")
+    if arguments["--threshold"]:
+        hdf5_name = str("./data/abide_threshold.hdf5")
+    if arguments["--leave-site-out"]:
+        hdf5_name = str("./data/abide_leave-site-out.hdf5")
+
+    hdf5 = hdf5_handler(bytes(hdf5_name,encoding="utf8"), 'a')
 
     valid_derivatives = ["cc200", "aal", "ez", "ho", "tt", "dosenbach160"]
     derivatives = [derivative for derivative
@@ -519,7 +527,7 @@ if __name__ == "__main__":
         config = {"derivative": derivative}
 
         if arguments["--whole"]:
-            experiments += [format_config("{derivative}_whole", config)],
+            experiments += [format_config("{derivative}_whole", config)]
 
         if arguments["--male"]:
             experiments += [format_config("{derivative}_male", config)]
@@ -543,5 +551,5 @@ if __name__ == "__main__":
 
     experiments = sorted(experiments)
     for experiment in experiments:
-        # print(experiment)
-        run_nn(hdf5, experiment[0], code_size_1, code_size_2)
+        print(experiment)
+        run_nn(hdf5, experiment, code_size_1, code_size_2)

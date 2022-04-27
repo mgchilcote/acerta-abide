@@ -134,11 +134,19 @@ if __name__ == "__main__":
 
     arguments = docopt(__doc__)
 
+    if arguments["--whole"]:
+        hdf5_name = str("./data/abide_whole.hdf5")
+    if arguments["--male"]:
+        hdf5_name = str("./data/abide_male.hdf5")
+    if arguments["--threshold"]:
+        hdf5_name = str("./data/abide_threshold.hdf5")
+    if arguments["--leave-site-out"]:
+        hdf5_name = str("./data/abide_leave-site-out.hdf5")
+
     folds = int(arguments["--folds"])
     pheno_path = "./data/phenotypes/Phenotypic_V1_0b_preprocessed1.csv"
     pheno = load_phenotypes(pheno_path)
-
-    hdf5 = hdf5_handler(bytes("./data/abide.hdf5",encoding="utf8"), 'a')
+    hdf5 = hdf5_handler(bytes(hdf5_name,encoding="utf8"), 'a')
 
     valid_derivatives = ["cc200", "aal", "ez", "ho", "tt", "dosenbach160"]
     derivatives = [derivative for derivative in arguments["<derivative>"] if derivative in valid_derivatives]
@@ -150,18 +158,21 @@ if __name__ == "__main__":
         
         print ("Preparing whole dataset")
         prepare_folds(hdf5, folds, pheno, derivatives, experiment="{derivative}_whole")
+        
 
     if arguments["--male"]:
         
         print ("Preparing male dataset")
         pheno_male = pheno[pheno["SEX"] == "M"]
         prepare_folds(hdf5, folds, pheno_male, derivatives, experiment="{derivative}_male")
+        
 
     if arguments["--threshold"]:
         
         print ("Preparing thresholded dataset")
         pheno_thresh = pheno[pheno["MEAN_FD"] <= 0.2]
         prepare_folds(hdf5, folds, pheno_thresh, derivatives, experiment="{derivative}_threshold")
+        
 
     if arguments["--leave-site-out"]:
         
@@ -175,3 +186,4 @@ if __name__ == "__main__":
                     "site": site,
                 })
             )
+        

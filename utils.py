@@ -20,12 +20,12 @@ replacement_field = '{' + identifier + '}'
 
 
 def reset():
-    tf.reset_default_graph()
+    tf.compat.v1.reset_default_graph()
     #ops.reset_default_graph()
     # tf.compat.v1.reset_default_graph()
     random.seed(19)
     np.random.seed(19)
-    tf.set_random_seed(19)
+    tf.compat.v1.set_random_seed(19)
     #tf.random.set_seed(19)
 
 
@@ -166,11 +166,11 @@ def to_softmax(n_classes, classe):
 
 def load_ae_encoder(input_size, code_size, model_path):
     model = ae(input_size, code_size)
-    init = tf.global_variables_initializer()
+    init = tf.compat.v1.global_variables_initializer()
     try:
-        with tf.Session() as sess:
+        with tf.compat.v1.Session() as sess:
             sess.run(init)
-            saver = tf.train.Saver(model["params"], write_version= tf.train.SaverDef.V2)
+            saver = tf.compat.v1.train.Saver(model["params"], write_version= tf.compat.v1.train.SaverDef.V2)
             if os.path.isfile(model_path):
                 print ("Restoring", model_path)
                 saver.restore(sess, model_path)
@@ -181,7 +181,7 @@ def load_ae_encoder(input_size, code_size, model_path):
 
 
 def sparsity_penalty(x, p, coeff):
-    p_hat = tf.reduce_mean(tf.abs(x), 0)
-    kl = p * tf.log(p / p_hat) + \
-        (1 - p) * tf.log((1 - p) / (1 - p_hat))
-    return coeff * tf.reduce_sum(kl)
+    p_hat = tf.reduce_mean(input_tensor=tf.abs(x), axis=0)
+    kl = p * tf.math.log(p / p_hat) + \
+        (1 - p) * tf.math.log((1 - p) / (1 - p_hat))
+    return coeff * tf.reduce_sum(input_tensor=kl)
